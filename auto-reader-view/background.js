@@ -7,44 +7,49 @@ var tabPast = new Set();
 function updateIcon(enabled) {
   console.log("Updating icon");
   if (enabled) {
-    browser.browserAction.setBadgeText({text: "✓"});
-    browser.browserAction.setBadgeBackgroundColor({color: "green"});
-  }
-  else {
-    browser.browserAction.setBadgeText({text: ""});
-    browser.browserAction.setBadgeBackgroundColor({color: null});
+    browser.browserAction.setBadgeText({ text: "✓" });
+    browser.browserAction.setBadgeBackgroundColor({ color: "green" });
+  } else {
+    browser.browserAction.setBadgeText({ text: "" });
+    browser.browserAction.setBadgeBackgroundColor({ color: null });
   }
 }
 
 function handleMessage(msg) {
   console.log("received message", msg);
   if (msg.type == "domainState") {
-    // Sent by the panel when it loads to determine the current domain and
-    // its state.
-    return browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT})
-      .then(tabs => browser.tabs.get(tabs[0].id))
-      .then(tab => {
+    // Sent by the panel when it loads to determine the current domain
+    // and its state.
+    return browser.tabs
+      .query({
+        active: true,
+        windowId: browser.windows.WINDOW_ID_CURRENT,
+      })
+      .then((tabs) => browser.tabs.get(tabs[0].id))
+      .then((tab) => {
         if (isNonReaderAboutPage(tab.url)) {
-          return {"valid": false};
+          return { valid: false };
         }
         var domain = domainFromUrl(tab.url);
         console.log(`Checking enabled status for ${domain}`);
-        return isDomainEnabled(domain).then(enabled => {
+        return isDomainEnabled(domain).then((enabled) => {
           updateIcon(enabled);
-          return {"enabled": enabled, "domain": domain, "valid": true};
+          return { enabled: enabled, domain: domain, valid: true };
         });
       });
-  }
-  else if (msg.type == "domainChange") {
+  } else if (msg.type == "domainChange") {
     // Sent by the panel to indicate the new state of the given domain.
-    browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT})
-      .then(tabs => browser.tabs.get(tabs[0].id))
-      .then(tab => {
+    browser.tabs
+      .query({
+        active: true,
+        windowId: browser.windows.WINDOW_ID_CURRENT,
+      })
+      .then((tabs) => browser.tabs.get(tabs[0].id))
+      .then((tab) => {
         if (msg.enabled) {
           addDomain(msg.domain);
           tryToggleReaderView(tab);
-        }
-        else {
+        } else {
           removeDomain(msg.domain);
         }
         updateIcon(msg.enabled);
@@ -55,53 +60,61 @@ function handleMessage(msg) {
 function handleTabSwitch(activeInfo) {
   console.log(`Tab ${activeInfo.tabId} was activated`);
   if (activeInfo.tabId) {
-    return browser.tabs.get(activeInfo.tabId)
-      .then(tab => {
-        var domain = domainFromUrl(tab.url);
-        console.log(`Checking enabled status for ${domain}`);
-        return isDomainEnabled(domain).then(enabled => {
-          updateIcon(enabled);
-          return enabled;
-        });
+    return browser.tabs.get(activeInfo.tabId).then((tab) => {
+      var domain = domainFromUrl(tab.url);
+      console.log(`Checking enabled status for ${domain}`);
+      return isDomainEnabled(domain).then((enabled) => {
+        updateIcon(enabled);
+        return enabled;
       });
+    });
   }
 }
 
 // Check storage for the domain
 // @return {Promise<Boolean>}
 function isDomainEnabled(domain) {
-  return getStorage().get("enabledDomains").then(result => {
-    console.log("Enabled domains are:", result.enabledDomains);
-    var isEnabled = result.enabledDomains.indexOf(domain) >= 0;
-    console.log(`${domain} enabled: ${isEnabled}`);
-    return isEnabled;
-  });
+  return getStorage()
+    .get("enabledDomains")
+    .then((domains) => {
+      console.log("Enabled domains are:", domains.enabledDomains);
+      var isEnabled = domains.enabledDomains.indexOf(domain) >= 0;
+      console.log(`${domain} enabled: ${isEnabled}`);
+      return isEnabled;
+    });
 }
 
 // Add a domain to storage
 function addDomain(domain) {
-  console.log("Adding domain " + domain);
-  getStorage().get("enabledDomains").then(domains => {
-    console.log("retrieved domains", domains);
-    if (domains.enabledDomains.indexOf(domain) === -1) {
-      domains.enabledDomains.push(domain);
-    }
-    getStorage().set({"enabledDomains": domains.enabledDomains});
-    console.log("Stored domains:", domains.enabledDomains);
-  });
+  console.log("Adding domain ", domain);
+  getStorage()
+    .get("enabledDomains")
+    .then((domains) => {
+      console.log("retrieved domains", domains);
+      let idx = domains.enabledDomains.indexOf(domain);
+      if (idx === -1) {
+        domains.enabledDomains.push(domain);
+      }
+      getStorage().set({ enabledDomains: domains.enabledDomains });
+      console.log("Stored domains:", domains.enabledDomains);
+    });
 }
 
 // Remove a domain from storage
 function removeDomain(domain) {
-  console.log("Removing domain " + domain);
-  getStorage().get("enabledDomains").then(result => {
-    var i = result.enabledDomains.indexOf(domain);
-    delete result.enabledDomains[i];
-    result.enabledDomains = result.enabledDomains.filter(Boolean);
-    getStorage().set({"enabledDomains": result.enabledDomains});
-    console.log("Updated domains:");
-    console.log(result.enabledDomains);
-  });
+  console.log("Removing domain ", domain);
+  getStorage()
+    .get("enabledDomains")
+    .then((domains) => {
+      console.log("retrieved domains", domains);
+      let idx = domains.enabledDomains.indexOf(domain);
+      if (idx > -1) {
+        delete domains.enabledDomains[idx];
+      }
+      domains.enabledDomains = domains.enabledDomains.filter(Boolean);
+      getStorage().set({ enabledDomains: domains.enabledDomains });
+      console.log("Updated domains:", domains.enabledDomains);
+    });
 }
 
 function saveDomainsList(domainsList) {
@@ -117,16 +130,16 @@ function getStorage() {
 // Initialize storage if not already done so.
 // @return {Promise}
 function initStorage() {
-  var store = getStorage();
-  return store.get("enabledDomains").then(domains => {
-    if (isObjectEmpty(domains)) {
-      console.log("Initializing storage");
-      store.set({"enabledDomains": new Array()});
-    }
-    else {
-      console.log("Storage already intialized");
-    }
-  });
+  return getStorage()
+    .get("enabledDomains")
+    .then((domains) => {
+      if (isObjectEmpty(domains)) {
+        console.log("Initializing storage");
+        store.set({ enabledDomains: new Array() });
+      } else {
+        console.log("Storage already intialized");
+      }
+    });
 }
 
 function isObjectEmpty(obj) {
@@ -135,9 +148,7 @@ function isObjectEmpty(obj) {
 
 // Extract domain from a url
 function domainFromUrl(url) {
-  if (url.startsWith("about:reader?")) {
-    url = decodeURIComponent(url.substr("about:reader?url=".length));
-  }
+  url = readerToNormalUrl(url);
   var r = /:\/\/(.[^/]+)/;
   var matches = url.match(r);
   if (matches && matches.length >= 2) {
@@ -148,13 +159,12 @@ function domainFromUrl(url) {
 
 function handleTabUpdate(tabId, changeInfo, tab) {
   // console.log(`Handling tab update for tab ${tabId} ${tab.url}, status: ${changeInfo.status}`, changeInfo);
-  if ((changeInfo && changeInfo.isArticle) ||
-      (tab && tab.isArticle)) {
+  if ((changeInfo && changeInfo.isArticle) || (tab && tab.isArticle)) {
     var domain = domainFromUrl(tab.url);
     console.log(`Domain for updated tab ${tab.id} is ${domain}`);
-    isDomainEnabled(domain).then(isEnabled => {
+    isDomainEnabled(domain).then((isEnabled) => {
       updateIcon(isEnabled);
-      if(isEnabled) {
+      if (isEnabled) {
         console.log(`Auto reader enabled for ${domain}`);
         tryToggleReaderView(tab);
       }
@@ -171,8 +181,7 @@ function tryToggleReaderView(tab) {
   // Already in reader view
   else if (tab.isInReaderMode) {
     // do nothing
-  }
-  else {
+  } else {
     console.log(`Toggling reader mode for ${tab.id} ${tab.url} (isArticle? ${tab.isArticle})`);
     browser.tabs.toggleReaderMode(tab.id).catch(onError);
   }
@@ -183,10 +192,10 @@ function tryToggleReaderView(tab) {
   // Housekeeping to prevent unbounded memory use
   if (tabPast.size > 50) {
     // TODO use an LRU cache instead
-    console.log("tabPast size is " + tabPast.size + ". Clearing entries.");
+    console.log(`tabPast size is ${tabPast.size}. Clearing entries.`);
     freeCache(tabPast, 5);
   }
-  console.log("New tab past: " + setToString(tabPast));
+  console.log("New tab past: ", setToString(tabPast));
 }
 
 function freeCache(set, numToRemove) {
@@ -206,24 +215,27 @@ function setToString(s) {
 
 function normalToReaderUrl(url) {
   if (!url.startsWith("about:reader")) {
-    url = "about:reader?url=" + encodeURIComponent(url);
+    return "about:reader?url=" + encodeURIComponent(url);
   }
   return url;
 }
 
 function readerToNormalUrl(readerUrl) {
-  return decodeURIComponent(readerUrl.substr("about:reader?url=".length));
+  if (readerUrl.startsWith("about:reader?")) {
+    let url = readerUrl.substr("about:reader?url=".length);
+    return decodeURIComponent(url);
+  }
+  return readerUrl;
 }
 
 function isNonReaderAboutPage(url) {
-    return url.startsWith("about:") && !url.startsWith("about:reader");
+  return url.startsWith("about:") && !url.startsWith("about:reader");
 }
 
 function isUrlHomePage(url) {
   var domain = domainFromUrl(url);
   var endOfDomainPartIdx = url.indexOf(domain) + domain.length;
   var pathPart = url.substr(endOfDomainPartIdx);
-
   return pathPart.length < 2; // 2 in case of trailing '/'
 }
 
@@ -232,7 +244,6 @@ function onError(err) {
 }
 
 console.log("background script started");
-console.log("add on click");
 
 updateIcon();
 initStorage().then(() => {

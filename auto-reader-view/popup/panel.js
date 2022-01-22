@@ -13,25 +13,23 @@ function getDomainInput() {
 function submitClicked(event) {
   console.log("submitButton clicked");
   var btn = event.target;
-  var isEnabled = (btn.value == "Enable");
+  var isEnabled = btn.value == "Enable";
   var domain = getDomainInput().value;
-  updatePanelUi(true, domain, isEnabled);
+  updatePanelUI(true, domain, isEnabled);
 
   browser.runtime.sendMessage({
     type: "domainChange",
     enabled: isEnabled,
-    "domain": domain
+    domain: domain,
   });
 }
 
-function updatePanelUi(isValid, domain, isEnabled) {
+function updatePanelUI(isValid, domain, isEnabled) {
   if (!isValid) {
     setInvalidState();
-  }
-  else if (isEnabled) {
+  } else if (isEnabled) {
     setEnabledState(domain);
-  }
-  else {
+  } else {
     setDisabledState(domain);
   }
 }
@@ -87,7 +85,7 @@ function replacePromptText(part1, domain = null, part2 = null) {
 function handlePanelOpened(msg) {
   console.log("Received message", msg);
   if (msg.type === "browserActionClicked") {
-    updatePanelUi(msg.domain, msg.isEnabled);
+    updatePanelUI(msg.domain, msg.isEnabled);
   }
 }
 
@@ -96,7 +94,7 @@ console.log("Loaded panel.js");
 getButton().addEventListener("click", submitClicked);
 browser.runtime.onMessage.addListener(handlePanelOpened);
 
-browser.runtime.sendMessage({"type": "domainState"}).then(resp => {
+browser.runtime.sendMessage({ type: "domainState" }).then((resp) => {
   console.log("received resp", resp);
   var domain = null;
   var isEnabled = null;
@@ -104,5 +102,5 @@ browser.runtime.sendMessage({"type": "domainState"}).then(resp => {
     domain = resp.domain;
     isEnabled = resp.enabled;
   }
-  updatePanelUi(resp.valid, resp.domain, resp.enabled);
+  updatePanelUI(resp.valid, resp.domain, resp.enabled);
 });
