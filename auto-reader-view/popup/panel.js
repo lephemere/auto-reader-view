@@ -85,7 +85,7 @@ function replacePromptText(part1, domain = null, part2 = null) {
 function handlePanelOpened(msg) {
   console.log("Received message", msg);
   if (msg.type === "browserActionClicked") {
-    updatePanelUI(msg.domain, msg.isEnabled);
+    updatePanelUI(msg.valid, msg.domain, msg.isEnabled);
   }
 }
 
@@ -96,11 +96,5 @@ browser.runtime.onMessage.addListener(handlePanelOpened);
 
 browser.runtime.sendMessage({ type: "domainState" }).then((resp) => {
   console.log("received resp", resp);
-  var domain = null;
-  var isEnabled = null;
-  if (resp.valid) {
-    domain = resp.domain;
-    isEnabled = resp.enabled;
-  }
   updatePanelUI(resp.valid, resp.domain, resp.enabled);
 });
