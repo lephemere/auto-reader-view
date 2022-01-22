@@ -107,7 +107,7 @@ function redirectToReaderView(tab) {
 function freeCache(set, numToRemove) {
   // remove least recently inserted entries
   // TODO use an LRU cache instead
-  var iter = tabPast.values()
+  var iter = tabPast.values();
   for (var i = 0; i < numToRemove; i++) {
     var val = iter.next().value;
     set.delete(val);
@@ -118,7 +118,6 @@ function freeCache(set, numToRemove) {
 function setToString(s) {
   return JSON.stringify([...tabPast]);
 }
-
 
 // Add a checkmark badge to indicate the reader view is enabled
 function setEnabledButtonState(button, tab, panel) {
@@ -135,8 +134,6 @@ function setDisabledButtonState(button, tab) {
     badgeColor : ""
   });
 }
-
-
 
 // Check storage for the domain
 function isDomainEnabled(url) {

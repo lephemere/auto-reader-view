@@ -7,15 +7,15 @@ function getPrompt() {
 }
 
 function getDomainInput() {
-	return document.getElementById("domainInput");
+  return document.getElementById("domainInput");
 }
 
 function submitClicked(event) {
   console.log("submitButton clicked");
   var btn = event.target;
   var isEnabled = (btn.value == "Enable");
-	var domain = getDomainInput().value;
-	updatePanelUi(true, domain, isEnabled);
+  var domain = getDomainInput().value;
+  updatePanelUi(true, domain, isEnabled);
 
   browser.runtime.sendMessage({
     type: "domainChange",
@@ -29,7 +29,7 @@ function updatePanelUi(isValid, domain, isEnabled) {
     setInvalidState();
   }
   else if (isEnabled) {
-	  setEnabledState(domain);
+    setEnabledState(domain);
   }
   else {
     setDisabledState(domain);
@@ -48,16 +48,16 @@ function setEnabledState(domain) {
   // btn.style.display = '';
   btn.value = "Disable";
   btn.removeAttribute("disabled");
-	getDomainInput().value = domain;
+  getDomainInput().value = domain;
   replacePromptText("Pages from ", domain, " will automatically open in Reader View");
 }
 
 function setDisabledState(domain) {
-	var btn = getButton();
+  var btn = getButton();
   // btn.style.display = '';
   btn.value = "Enable";
   btn.removeAttribute("disabled");
-	getDomainInput().value = domain;
+  getDomainInput().value = domain;
   replacePromptText("Always open pages from ", domain, " in Reader View?");
 }
 
@@ -85,10 +85,10 @@ function replacePromptText(part1, domain = null, part2 = null) {
 }
 
 function handlePanelOpened(msg) {
-	console.log("Received message", msg);
-	if (msg.type === "browserActionClicked") {
-		updatePanelUi(msg.domain, msg.isEnabled);
-	}
+  console.log("Received message", msg);
+  if (msg.type === "browserActionClicked") {
+    updatePanelUi(msg.domain, msg.isEnabled);
+  }
 }
 
 console.log("Loaded panel.js");
@@ -97,12 +97,12 @@ getButton().addEventListener("click", submitClicked);
 browser.runtime.onMessage.addListener(handlePanelOpened);
 
 browser.runtime.sendMessage({"type": "domainState"}).then(resp => {
-		console.log("received resp", resp);
-    var domain = null;
-    var isEnabled = null;
-    if (resp.valid) {
-      domain = resp.domain;
-      isEnabled = resp.enabled;
-    }
-    updatePanelUi(resp.valid, resp.domain, resp.enabled);
+  console.log("received resp", resp);
+  var domain = null;
+  var isEnabled = null;
+  if (resp.valid) {
+    domain = resp.domain;
+    isEnabled = resp.enabled;
+  }
+  updatePanelUi(resp.valid, resp.domain, resp.enabled);
 });

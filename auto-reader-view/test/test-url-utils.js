@@ -13,5 +13,4 @@ exports["test isUrlHomePage"] = function(assert) {
   assert.ok(!uu.isUrlHomePage("https://google.com/search"));
 };
 
-
 require("sdk/test").run(exports);

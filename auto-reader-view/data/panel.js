@@ -39,20 +39,20 @@ function submitClicked(event) {
 }
 
 function setEnabledState(domain, btn, prompt) {
-  btn.style.display = '';
+  btn.style.display = "";
   btn.value = "Disable";
   replacePromptText(prompt, "Pages from ", domain,
       " will automatically open in Reader View.");
 }
 
 function setDisabledState(domain, btn, prompt) {
-  btn.style.display = '';
+  btn.style.display = "";
   btn.value = "Enable";
-  replacePromptText(prompt, "Always open pages from ", domain, " in Reader View?")
+  replacePromptText(prompt, "Always open pages from ", domain, " in Reader View?");
 }
 
 function setUnsupportedState(btn, prompt) {
-  btn.style.display = 'none';
+  btn.style.display = "none";
   replacePromptText(prompt, "Reader View not available on this page.", "", "");
 }
 

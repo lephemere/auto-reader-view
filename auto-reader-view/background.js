@@ -18,24 +18,24 @@ function updateIcon(enabled) {
 
 function handleMessage(msg) {
   console.log("received message", msg);
-	if (msg.type == 'domainState') {
+  if (msg.type == "domainState") {
     // Sent by the panel when it loads to determine the current domain and
-		// its state.
-		return browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT})
-			.then(tabs => browser.tabs.get(tabs[0].id))
-			.then(tab => {
+    // its state.
+    return browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT})
+      .then(tabs => browser.tabs.get(tabs[0].id))
+      .then(tab => {
         if (isNonReaderAboutPage(tab.url)) {
           return {"valid": false};
         }
-				var domain = domainFromUrl(tab.url);
+        var domain = domainFromUrl(tab.url);
         console.log(`Checking enabled status for ${domain}`);
-				return isDomainEnabled(domain).then(enabled => {
+        return isDomainEnabled(domain).then(enabled => {
           updateIcon(enabled);
-					return {"enabled": enabled, "domain": domain, "valid": true};
-				});
-			});
-	}
-  else if (msg.type == 'domainChange') {
+          return {"enabled": enabled, "domain": domain, "valid": true};
+        });
+      });
+  }
+  else if (msg.type == "domainChange") {
     // Sent by the panel to indicate the new state of the given domain.
     browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT})
       .then(tabs => browser.tabs.get(tabs[0].id))
@@ -67,7 +67,6 @@ function handleTabSwitch(activeInfo) {
   }
 }
 
-
 // Check storage for the domain
 // @return {Promise<Boolean>}
 function isDomainEnabled(domain) {
@@ -76,7 +75,7 @@ function isDomainEnabled(domain) {
     var isEnabled = result.enabledDomains.indexOf(domain) >= 0;
     console.log(`${domain} enabled: ${isEnabled}`);
     return isEnabled;
-	});
+  });
 }
 
 // Add a domain to storage
@@ -159,7 +158,7 @@ function handleTabUpdate(tabId, changeInfo, tab) {
         console.log(`Auto reader enabled for ${domain}`);
         tryToggleReaderView(tab);
       }
-    })
+    });
   }
 }
 
@@ -193,7 +192,7 @@ function tryToggleReaderView(tab) {
 function freeCache(set, numToRemove) {
   // remove least recently inserted entries
   // TODO use an LRU cache instead
-  var iter = tabPast.values()
+  var iter = tabPast.values();
   for (var i = 0; i < numToRemove; i++) {
     var val = iter.next().value;
     set.delete(val);
@@ -229,7 +228,7 @@ function isUrlHomePage(url) {
 }
 
 function onError(err) {
-    console.log(err);
+  console.log(err);
 }
 
 console.log("background script started");
