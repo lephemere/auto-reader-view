@@ -220,12 +220,12 @@ function normalToReaderUrl(url) {
   return url;
 }
 
-function readerToNormalUrl(readerUrl) {
-  if (readerUrl.startsWith("about:reader?")) {
-    let url = readerUrl.substr("about:reader?url=".length);
+function readerToNormalUrl(url) {
+  if (url.startsWith("about:reader")) {
+    let url = url.substr("about:reader?url=".length);
     return decodeURIComponent(url);
   }
-  return readerUrl;
+  return url;
 }
 
 function isNonReaderAboutPage(url) {
